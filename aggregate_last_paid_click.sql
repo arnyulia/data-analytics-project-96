@@ -23,14 +23,12 @@ with tab as (
     	DATE_TRUNC('day', s.visit_date) = DATE_TRUNC('day', vk.campaign_date) and
     	s.source = vk.utm_source and
     	s.medium = vk.utm_medium and 
-    	s.campaign = vk.utm_campaign and
-    	s.content =  vk.utm_content 
+    	s.campaign = vk.utm_campaign
 	left join ya_ads ya on 
     	DATE_TRUNC('day', s.visit_date) = DATE_TRUNC('day', ya.campaign_date) and
     	s.source = ya.utm_source and
     	s.medium = ya.utm_medium and 
-    	s.campaign = ya.utm_campaign and
-    	s.content = ya.utm_content
+    	s.campaign = ya.utm_campaign
     where s.medium <> 'organic'
 ),
 	tab2 as 
@@ -73,14 +71,12 @@ with tab as (
     	DATE_TRUNC('day', s.visit_date) = DATE_TRUNC('day', vk.campaign_date) and
     	s.source = vk.utm_source and
     	s.medium = vk.utm_medium and 
-    	s.campaign = vk.utm_campaign and
-    	s.content =  vk.utm_content 
+    	s.campaign = vk.utm_campaign
 	left join ya_ads ya on 
     	DATE_TRUNC('day', s.visit_date) = DATE_TRUNC('day', ya.campaign_date) and
     	s.source = ya.utm_source and
     	s.medium = ya.utm_medium and 
-    	s.campaign = ya.utm_campaign and
-    	s.content = ya.utm_content
+    	s.campaign = ya.utm_campaign
     where s.medium <> 'organic'
 ),
 	tab2 as 
