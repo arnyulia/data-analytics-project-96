@@ -1,0 +1,346 @@
+--общее кол-во визитов
+SELECT sum(count) visitors_count
+FROM
+    (SELECT
+        source,
+        medium,
+        to_char(visit_date, 'YYYY-MM-DD') AS date,
+        count(visitor_id),
+        count(DISTINCT visitor_id) count_distinct
+    FROM sessions
+    GROUP BY 1,2,3) с;
+
+--кол-во уникальных визитов
+select COUNT(distinct visitor_id) as distinct_visitors
+from sessions;
+
+--визиты по дням
+SELECT
+    date as date,
+    sum(count) visitors_count
+FROM
+    (SELECT
+        source,
+        medium,
+        to_char((visit_date), 'YYYY-MM-DD') date,
+        count(visitor_id)
+    FROM sessions
+    GROUP BY 1, 2, 3) c
+GROUP BY date
+ORDER BY visitors_count DESC;
+
+--визиты по неделям
+SELECT
+    weeks AS weeks,
+    sum(count) AS visitors_count
+FROM
+    (SELECT
+        source,
+        medium,
+        to_char(date_trunc('weekday', visit_date), 'YYYY-MM-DD') weeks,
+        count(visitor_id)
+    FROM sessions
+    GROUP BY 1, 2, 3) c
+GROUP BY 1
+ORDER BY 1;
+
+--визиты по дням недели
+select 
+            extract(ISODOW FROM visit_date),
+        to_char(date_trunc('day', visit_date), 'day')as day_of_week,
+        count(visitor_id) as count_visitors
+        from sessions
+        group by 1,2;
+
+--распределение визитов по источникам
+WITH tab as (
+SELECT
+    TO_CHAR(visit_date, 'Month') AS Month,
+    source,
+    medium,
+    COUNT(DISTINCT visitor_id) AS count_visitors,
+    CASE
+        WHEN source = 'yandex' THEN source
+        WHEN source = 'vk' THEN source
+        WHEN medium = 'organic' THEN 'free'
+        ELSE 'other'
+    END name_source 
+FROM sessions
+GROUP BY 1,2,3)
+SELECT 
+    Month,
+    name_source,
+    SUM(count_visitors)
+FROM tab
+GROUP BY 1, 2
+order by 3 desc;
+
+--Количество уникальных лидов
+SELECT
+    TO_CHAR(created_at, 'Month'),
+    COUNT(DISTINCT lead_id) count_leads
+FROM leads
+GROUP BY 1;
+
+--Количество лидов по источникам
+SELECT 
+     TO_CHAR(created_at , 'Month') AS Month,
+     source,
+     COUNT(DISTINCT lead_id) AS count_leads
+FROM leads l
+INNER JOIN sessions
+USING(visitor_id) 
+GROUP BY 1, 2
+ORDER BY 3 DESC;
+
+--распределение лидов по источникам
+WITH tab AS (
+SELECT 
+     TO_CHAR(created_at , 'Month') AS Month,
+     source,
+     medium,
+     COUNT(lead_id) AS count_leads,
+         CASE
+        WHEN source = 'yandex' THEN 'yandex'
+        WHEN source = 'vk' THEN 'vk'
+        WHEN medium = 'organic' THEN 'free'
+        ELSE 'others'
+    END name_source 
+FROM leads l
+INNER JOIN sessions
+USING(visitor_id) 
+GROUP BY 1, 2, 3)
+SELECT 
+    name_source,
+    SUM(count_leads) AS count_leads
+FROM tab
+GROUP BY 1
+order by 2 desc;
+
+--ежедневное распределение лидов по источникам
+SELECT 
+     TO_CHAR(created_at , 'YYYY-MM-DD') AS Day_of_month,
+     source,
+     COUNT(DISTINCT lead_id) AS count_leads
+FROM leads
+INNER JOIN sessions
+USING(visitor_id) 
+GROUP BY 1, 2
+order by 1, 3 desc;
+
+
+--визиты-лиды-клиенты по источникам
+WITH tab AS (
+SELECT
+    DISTINCT ON (s.visitor_id) s.visitor_id,
+    visit_date,
+    s.source,
+    lead_id,
+    closing_reason,
+    CASE 
+        WHEN closing_reason = 'Успешная продажа'
+        THEN 1 ELSE 0 
+    END purchases,
+    status_id   
+FROM sessions s
+LEFT JOIN leads l
+ON s.visitor_id = l.visitor_id)
+SELECT
+     source,
+     COUNT(visitor_id) AS count_visitors,
+     COUNT(lead_id) AS count_leads,
+     SUM(purchases) AS count_clients
+FROM tab
+GROUP BY TO_CHAR(visit_date, 'Month'), source
+HAVING COUNT(DISTINCT lead_id) != 0
+ORDER BY 4 DESC;
+
+--Количество закрытых лидов для воронки
+SELECT sum(leed_amount) AS Purchases_count
+FROM
+    (SELECT
+        1 AS leed,
+        amount,
+        closing_reason,
+        CASE
+            WHEN amount > 0 THEN 1
+            ELSE 0
+        END AS leed_amount,
+        to_char(date_trunc('day', created_at), 'month') AS month
+    FROM leads
+    ORDER BY month) с
+
+
+--Отношение клиентов к общему количеству лидов (Конверсия,%)
+SELECT round((SUM(leed_amount) * 100.00 / SUM(leed)), 2) "конверсия из лида в клиента"
+FROM
+    (SELECT
+        1 AS leed,
+        amount,
+        closing_reason,
+        CASE
+            WHEN amount > 0 THEN 1
+            ELSE 0
+        END AS leed_amount,
+        TO_CHAR(created_at, 'YYYY-MM-DD')
+    FROM leads) c;
+
+--Расходы в динамике по source / medium / campaign
+SELECT
+    date_trunc('day', campaign_date) AS visit_date,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    sum(daily_spent) expenses
+FROM vk_ads
+GROUP BY 1, 2, 3, 4
+UNION ALL
+SELECT
+    date_trunc('day', campaign_date) AS visit_date,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    sum(daily_spent) expenses
+FROM ya_ads
+GROUP BY 1, 2, 3, 4
+ORDER BY 1, 2, 3, 4;
+
+--Кампании не приносящие лидов
+SELECT
+    s.source AS utm_source,
+    s.medium AS utm_medium,
+    s.campaign AS utm_campaign,
+    count(l.lead_id) AS lead_count
+FROM leads l
+RIGHT JOIN sessions s
+    ON
+        l.visitor_id = s.visitor_id
+        AND l.created_at >= s.visit_date
+GROUP BY 1, 2, 3
+HAVING count(l.lead_id) = 0;
+
+--Выручка
+SELECT sum(amount) revenue
+FROM
+    (SELECT
+        1 AS leed,
+        amount,
+        closing_reason,
+        CASE
+            WHEN amount > 0 THEN 1
+            ELSE 0
+        END AS leed_amount,
+        to_char(created_at, 'YYYY-MM-DD')
+    FROM leads) с;
+
+--Общие расходы за июнь на vk и ya
+
+select month, sum(spent) from
+(SELECT
+    TO_CHAR(campaign_date, 'Month') AS month,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    SUM(daily_spent) AS spent 
+FROM vk_ads vk
+GROUP BY 1,2,3,4
+UNION ALL
+SELECT
+    TO_CHAR(campaign_date, 'Month') AS month,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    SUM(daily_spent) AS spent  
+FROM ya_ads ya
+GROUP BY 1,2,3,4
+ORDER BY 1) c
+group by 1;
+
+--Воронка продаж
+
+SELECT
+    name as name,
+    sum(count) AS indicators
+FROM
+    (SELECT
+        'Visits' AS name,
+        count(*) AS count
+    FROM sessions
+    UNION ALL
+    SELECT
+        'Leads' AS name,
+        count(*)
+    FROM leads
+    UNION ALL
+    SELECT
+        'clients' AS name,
+        count(*)
+    FROM leads
+    WHERE amount > 0) c
+GROUP BY 1 order by 2 desc;
+
+--расчеты основных метрик на базе таблицы last_paid_click_arnyulia
+
+-- Metrics by source
+
+SELECT
+   utm_source,
+   ROUND(SUM(total_cost)/SUM(visitors_count), 2) AS CPU,
+   ROUND(SUM(total_cost)/SUM(leads_count), 2) AS CPL,
+   ROUND(SUM(total_cost)/SUM(purchases_count), 2) AS CPPU,
+   ROUND((SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost), 2) AS ROI
+FROM last_paid_click_arnyulia
+GROUP BY utm_source
+HAVING  SUM(total_cost) > 0
+    AND SUM(visitors_count) > 0
+    AND SUM(purchases_count) > 0
+    AND SUM(revenue) > 0;
+
+-- Metrics by source, medium and campaign
+
+SELECT
+   utm_source,
+   utm_medium,
+   utm_campaign,
+   ROUND(SUM(total_cost)/SUM(visitors_count), 2) AS CPU,
+   ROUND(SUM(total_cost)/SUM(leads_count), 2) AS CPL,
+   ROUND(SUM(total_cost)/SUM(purchases_count), 2) AS CPPU,
+   ROUND((SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost), 2) AS ROI
+FROM last_paid_click_arnyulia
+GROUP BY 1, 2, 3
+HAVING  SUM(total_cost) > 0
+    AND SUM(visitors_count) > 0
+    AND SUM(purchases_count) > 0
+    AND SUM(revenue) > 0;
+
+--Metrics by paid-off campaigns
+
+SELECT
+   utm_source,
+   utm_medium,
+   utm_campaign,
+   SUM(revenue) AS revenue,
+   SUM(total_cost) AS total_cost,
+  ROUND((SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost), 2) AS ROI
+FROM last_paid_click_arnyulia
+GROUP BY 1, 2, 3
+HAVING  SUM(total_cost) > 0
+AND (SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost) >= 0
+ORDER BY 6 desc;
+
+--Metrics by unprofitable campaigns
+
+SELECT
+   utm_source,
+   utm_medium,
+   utm_campaign,
+   SUM(revenue) AS revenue,
+   SUM(total_cost) AS total_cost,
+  ROUND((SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost), 2) AS ROI
+FROM last_paid_click_arnyulia
+GROUP BY 1, 2, 3
+HAVING  SUM(total_cost) > 0
+AND (SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost) < 0
+ORDER BY 6 DESC;
+
+
