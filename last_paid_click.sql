@@ -30,5 +30,5 @@ select
         closing_reason,
         status_id
     from tab
-    where tab.rn = 1 and status_id = 142
+    where tab.rn = 1
    order by amount desc, visit_date, 4,5,6;
