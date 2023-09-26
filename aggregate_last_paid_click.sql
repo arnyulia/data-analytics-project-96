@@ -28,9 +28,16 @@ tab2 as (
         tab.campaign as utm_campaign,
         COUNT(visitor_id) as visitors_count,
         COUNT(lead_id) as leads_count,
-        COUNT(status_id) as purchases_count,
+        SUM(
+            case
+                when
+                    closing_reason = 'Успешная продажа' or status_id = 142
+                    then 1
+                else 0
+            end
+        ) as purchases_count,
         SUM(amount) as revenue,
-        TO_CHAR(DATE_TRUNC('day', tab.visit_date), 'YY-MM-DD') as visit_date
+        TO_CHAR(tab.visit_date, 'YY-MM-DD') as visit_date
     from tab
     where tab.rn = 1
     group by 1, 2, 3, 8
@@ -74,3 +81,4 @@ from tab2 left join tab4
         and tab2.utm_campaign = tab4.utm_campaign
 group by 1, 2, 3, 4, 5, 6, 7, 8, 9
 order by revenue desc nulls last, visit_date asc, visitors_count desc, 3, 4, 5;
+
