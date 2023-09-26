@@ -31,4 +31,4 @@ select
         status_id
     from tab
     where tab.rn = 1
-   order by amount desc, visit_date, 4,5,6;
+   order by amount desc NULLS LAST, visit_date, 4,5,6;
