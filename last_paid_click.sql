@@ -25,7 +25,7 @@ with tab as (
 
 select
     tab.visitor_id,
-    tab.visit_date,
+    TO_CHAR(tab.visit_date, 'YYYY-MM-DD') as visit_date
     tab.source as utm_source,
     tab.medium as utm_medium,
     tab.campaign as utm_campaign,
