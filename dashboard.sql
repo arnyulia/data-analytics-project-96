@@ -234,24 +234,28 @@ group by 1;
 --Воронка продаж
 
 WITH visit_lead AS (
+    SELECT DISTINCT ON (s.visitor_id)
+        s.visitor_id,
+        visit_date,
+        lead_id,
+        closing_reason,
+        status_id,
+        CASE
+            WHEN closing_reason = 'Успешная продажа' OR status_id = 142
+                THEN 1
+            ELSE 0
+        END AS purchases
+    FROM sessions AS s
+    LEFT JOIN leads AS l
+        ON
+            s.visitor_id = l.visitor_id
+            AND visit_date <= created_at
+)
+
 SELECT
-    DISTINCT ON (s.visitor_id)
-    s.visitor_id,
-    visit_date,
-    lead_id,
-    closing_reason,
-    CASE 
-        WHEN closing_reason = 'Успешная продажа' OR status_id = 142
-        THEN 1 ELSE 0 
-    END purchases,
-    status_id   
-FROM sessions s
-LEFT JOIN leads l
-ON s.visitor_id = l.visitor_id)
-SELECT
-     COUNT(DISTINCT visitor_id) AS count_visitors,
-     COUNT(DISTINCT lead_id) AS count_leads,
-     SUM(purchases)
+    COUNT(DISTINCT visitor_id) AS count_visitors,
+    COUNT(DISTINCT lead_id) AS count_leads,
+    SUM(purchases)
 FROM visit_lead
 GROUP BY TO_CHAR(visit_date, 'Month');
 
