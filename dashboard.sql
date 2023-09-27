@@ -51,7 +51,7 @@ FROM tab
 GROUP BY 1, 2
 order by 3 desc;
 
---Количество уникальных лидов
+--Общее Количество уникальных лидов
 SELECT
     TO_CHAR(created_at, 'Month'),
     COUNT(DISTINCT lead_id) count_leads
@@ -66,6 +66,7 @@ SELECT
 FROM leads l
 INNER JOIN sessions
 USING(visitor_id) 
+AND visit_date <= created_at
 GROUP BY 1, 2
 ORDER BY 3 DESC;
 
@@ -81,6 +82,7 @@ SELECT
 FROM leads l
 INNER JOIN sessions
 USING(visitor_id) 
+AND visit_date <= created_at
 GROUP BY 1 
 order by 2;
 
@@ -92,6 +94,7 @@ SELECT
 FROM leads
 INNER JOIN sessions
 USING(visitor_id) 
+AND visit_date <= created_at
 GROUP BY 1, 2
 order by 1, 3 desc;
 
@@ -111,7 +114,8 @@ SELECT
     status_id   
 FROM sessions s
 LEFT JOIN leads l
-ON s.visitor_id = l.visitor_id)
+ON s.visitor_id = l.visitor_id
+AND visit_date <= created_at)
 SELECT
      source,
      COUNT(visitor_id) AS count_visitors,
@@ -121,22 +125,6 @@ FROM tab
 GROUP BY TO_CHAR(visit_date, 'Month'), source
 HAVING COUNT(DISTINCT lead_id) != 0
 ORDER BY 4 DESC;
-
---Количество закрытых лидов для воронки
-SELECT sum(leed_amount) AS Purchases_count
-FROM
-    (SELECT
-        1 AS leed,
-        amount,
-        closing_reason,
-        CASE
-            WHEN amount > 0 THEN 1
-            ELSE 0
-        END AS leed_amount,
-        to_char(date_trunc('day', created_at), 'month') AS month
-    FROM leads
-    ORDER BY month) с
-
 
 --Отношение клиентов к общему количеству лидов (Конверсия,%)
 SELECT
@@ -158,6 +146,7 @@ FROM
             END AS lead_amount
         FROM sessions AS s LEFT JOIN leads AS l
             ON s.visitor_id = l.visitor_id
+            AND visit_date <= created_at
 ) AS c;
 
 --Расходы в динамике по source / medium / campaign
