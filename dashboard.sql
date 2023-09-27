@@ -51,7 +51,7 @@ FROM tab
 GROUP BY 1, 2
 order by 3 desc;
 
---Общее Количество уникальных лидов
+--Общее Количество уникальных лидов за июнь
 SELECT
     TO_CHAR(created_at, 'Month'),
     COUNT(DISTINCT lead_id) count_leads
@@ -77,7 +77,7 @@ SELECT
         WHEN medium = 'organic' THEN 'free'
         ELSE 'others'
     END name_source,
-     COUNT(lead_id) AS count_leads
+     COUNT(distinct lead_id) AS count_leads
 FROM leads l
 INNER JOIN sessions s
 on s.visitor_id=l.visitor_id 
@@ -89,7 +89,7 @@ SELECT
      TO_CHAR(created_at , 'YYYY-MM-DD') AS Day_of_month,
      source,
      COUNT(DISTINCT lead_id) AS count_leads
-FROM leads
+FROM leads l
 INNER JOIN sessions s
 on s.visitor_id=l.visitor_id  
 GROUP BY 1, 2
@@ -132,7 +132,7 @@ SELECT
     sum(lead_amount)
 FROM
     (
-        SELECT DISTINCT
+        SELECT DISTINCT ON (s.visitor_id)
             s.visitor_id,
             l.lead_id,
             amount,
