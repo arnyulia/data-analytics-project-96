@@ -65,7 +65,7 @@ SELECT
      COUNT(DISTINCT lead_id) AS count_leads
 FROM leads l
 INNER JOIN sessions
-USING(visitor_id) 
+on s.visitor_id=l.visitor_id 
 AND visit_date <= created_at
 GROUP BY 1, 2
 ORDER BY 3 DESC;
@@ -81,7 +81,7 @@ SELECT
      COUNT(lead_id) AS count_leads
 FROM leads l
 INNER JOIN sessions
-USING(visitor_id) 
+on s.visitor_id=l.visitor_id 
 AND visit_date <= created_at
 GROUP BY 1 
 order by 2;
@@ -93,7 +93,7 @@ SELECT
      COUNT(DISTINCT lead_id) AS count_leads
 FROM leads
 INNER JOIN sessions
-USING(visitor_id) 
+on s.visitor_id=l.visitor_id  
 AND visit_date <= created_at
 GROUP BY 1, 2
 order by 1, 3 desc;
