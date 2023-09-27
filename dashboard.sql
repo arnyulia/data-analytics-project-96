@@ -64,7 +64,7 @@ SELECT
      source,
      COUNT(DISTINCT lead_id) AS count_leads
 FROM leads l
-INNER JOIN sessions
+INNER JOIN sessions s
 on s.visitor_id=l.visitor_id 
 AND visit_date <= created_at
 GROUP BY 1, 2
@@ -80,7 +80,7 @@ SELECT
     END name_source,
      COUNT(lead_id) AS count_leads
 FROM leads l
-INNER JOIN sessions
+INNER JOIN sessions s
 on s.visitor_id=l.visitor_id 
 AND visit_date <= created_at
 GROUP BY 1 
@@ -92,7 +92,7 @@ SELECT
      source,
      COUNT(DISTINCT lead_id) AS count_leads
 FROM leads
-INNER JOIN sessions
+INNER JOIN sessions s
 on s.visitor_id=l.visitor_id  
 AND visit_date <= created_at
 GROUP BY 1, 2
