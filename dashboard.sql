@@ -1,14 +1,7 @@
 --общее кол-во визитов
-SELECT sum(count) visitors_count
-FROM
-    (SELECT
-        source,
-        medium,
-        to_char(visit_date, 'YYYY-MM-DD') AS date,
-        count(visitor_id),
-        count(DISTINCT visitor_id) count_distinct
-    FROM sessions
-    GROUP BY 1,2,3) с;
+SELECT
+        count(visitor_id) count_distinct
+    FROM sessions;
 
 --кол-во уникальных визитов
 select COUNT(distinct visitor_id) as distinct_visitors
