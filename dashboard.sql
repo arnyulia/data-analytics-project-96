@@ -249,7 +249,7 @@ FROM visit_lead
 GROUP BY TO_CHAR(visit_date, 'Month');
 
 
---расчеты основных метрик на базе таблицы last_paid_click_arnyulia
+--расчеты основных метрик на базе таблицы agg_lpc_arnyulia
 
 -- Metrics by source
 
@@ -259,7 +259,7 @@ SELECT
    ROUND(SUM(total_cost)/SUM(leads_count), 2) AS CPL,
    ROUND(SUM(total_cost)/SUM(purchases_count), 2) AS CPPU,
    ROUND((SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost), 2) AS ROI
-FROM last_paid_click_arnyulia
+FROM agg_lpc_arnyulia
 GROUP BY utm_source
 HAVING  SUM(total_cost) > 0
     AND SUM(visitors_count) > 0
@@ -276,7 +276,7 @@ SELECT
    ROUND(SUM(total_cost)/SUM(leads_count), 2) AS CPL,
    ROUND(SUM(total_cost)/SUM(purchases_count), 2) AS CPPU,
    ROUND((SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost), 2) AS ROI
-FROM last_paid_click_arnyulia
+FROM agg_lpc_arnyulia
 GROUP BY 1, 2, 3
 HAVING  SUM(total_cost) > 0
     AND SUM(visitors_count) > 0
@@ -292,7 +292,7 @@ SELECT
    SUM(revenue) AS revenue,
    SUM(total_cost) AS total_cost,
   ROUND((SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost), 2) AS ROI
-FROM last_paid_click_arnyulia
+FROM agg_lpc_arnyulia
 GROUP BY 1, 2, 3
 HAVING  SUM(total_cost) > 0
 AND (SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost) >= 0
@@ -307,7 +307,7 @@ SELECT
    SUM(revenue) AS revenue,
    SUM(total_cost) AS total_cost,
   ROUND((SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost), 2) AS ROI
-FROM last_paid_click_arnyulia
+FROM agg_lpc_arnyulia
 GROUP BY 1, 2, 3
 HAVING  SUM(total_cost) > 0
 AND (SUM(revenue) - SUM(total_cost))*100.00/SUM(total_cost) < 0
