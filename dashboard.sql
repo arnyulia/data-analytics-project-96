@@ -139,18 +139,26 @@ FROM
 
 
 --Отношение клиентов к общему количеству лидов (Конверсия,%)
-SELECT round((SUM(leed_amount) * 100.00 / SUM(leed)), 2) "конверсия из лида в клиента"
+SELECT
+    round(
+        (sum(lead_amount) * 100.00 / count(lead_id)), 2
+    ) AS "конверсия из лида в клиента",
+    count(lead_id),
+    sum(lead_amount)
 FROM
-    (SELECT
-        1 AS leed,
-        amount,
-        closing_reason,
-        CASE
-            WHEN amount > 0 THEN 1
-            ELSE 0
-        END AS leed_amount,
-        TO_CHAR(created_at, 'YYYY-MM-DD')
-    FROM leads) c;
+    (
+        SELECT DISTINCT
+            s.visitor_id,
+            l.lead_id,
+            amount,
+            closing_reason,
+            CASE
+                WHEN amount > 0 THEN 1
+                ELSE 0
+            END AS lead_amount
+        FROM sessions AS s LEFT JOIN leads AS l
+            ON s.visitor_id = l.visitor_id
+) AS c;
 
 --Расходы в динамике по source / medium / campaign
 SELECT
