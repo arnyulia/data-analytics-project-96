@@ -66,7 +66,6 @@ SELECT
 FROM leads l
 INNER JOIN sessions s
 on s.visitor_id=l.visitor_id 
-AND visit_date <= created_at
 GROUP BY 1, 2
 ORDER BY 3 DESC;
 
@@ -82,7 +81,6 @@ SELECT
 FROM leads l
 INNER JOIN sessions s
 on s.visitor_id=l.visitor_id 
-AND visit_date <= created_at
 GROUP BY 1 
 order by 2;
 
@@ -94,7 +92,6 @@ SELECT
 FROM leads
 INNER JOIN sessions s
 on s.visitor_id=l.visitor_id  
-AND visit_date <= created_at
 GROUP BY 1, 2
 order by 1, 3 desc;
 
