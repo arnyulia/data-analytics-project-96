@@ -123,6 +123,35 @@ GROUP BY TO_CHAR(visit_date, 'Month'), source
 HAVING COUNT(DISTINCT lead_id) != 0
 ORDER BY 4 DESC;
 
+--конверсии по кампаниям
+WITH tab AS
+(
+SELECT
+    DISTINCT ON (s.visitor_id) s.visitor_id,
+    visit_date,
+    s.source,
+    lead_id,
+    closing_reason,
+    CASE 
+        WHEN closing_reason = 'Успешная продажа' OR status_id = 142
+        THEN 1 ELSE 0 
+    END purchases,
+    status_id   
+FROM sessions s
+LEFT JOIN leads l
+ON s.visitor_id = l.visitor_id
+AND visit_date <= created_at
+)
+SELECT
+     source,
+     ROUND(COUNT(lead_id) * 100.00 / COUNT(visitor_id), 2) AS conv_visit_to_lead,
+     ROUND(SUM(purchases) * 100.00 / COUNT(lead_id), 2) AS conv_lead_to_client,
+     ROUND(SUM(purchases) * 100.00 / COUNT(visitor_id), 2) AS conv_visit_to_client
+FROM tab
+GROUP BY TO_CHAR(visit_date, 'Month'), source
+HAVING COUNT(lead_id) != 0
+ORDER BY 4 desc;
+
 --Отношение клиентов к общему количеству лидов (Конверсия,%)
 SELECT
     round(
