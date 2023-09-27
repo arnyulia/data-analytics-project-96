@@ -100,7 +100,7 @@ order by 1, 3 desc;
 WITH tab AS (
 SELECT
     DISTINCT ON (s.visitor_id) s.visitor_id,
-    visit_date,
+    s.visit_date,
     s.source,
     lead_id,
     closing_reason,
