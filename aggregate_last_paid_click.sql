@@ -37,7 +37,7 @@ tab2 as (
             end
         ) as purchases_count,
         SUM(amount) as revenue,
-        TO_CHAR(tab.visit_date, 'YY-MM-DD') as visit_date
+        TO_CHAR(tab.visit_date, 'YYYY-MM-DD') as visit_date
     from tab
     where tab.rn = 1
     group by 1, 2, 3, 8
@@ -45,7 +45,7 @@ tab2 as (
 
 tab4 as (
     select
-        TO_CHAR(campaign_date, 'YY-MM-DD') as visit_date,
+        TO_CHAR(campaign_date, 'YYYY-MM-DD') as visit_date,
         utm_source,
         utm_medium,
         utm_campaign,
@@ -54,7 +54,7 @@ tab4 as (
     group by 1, 2, 3, 4
     union all
     select
-        TO_CHAR(campaign_date, 'YY-MM-DD') as visit_date,
+        TO_CHAR(campaign_date, 'YYYY-MM-DD') as visit_date,
         utm_source,
         utm_medium,
         utm_campaign,
@@ -65,10 +65,10 @@ tab4 as (
 
 select
     tab2.visit_date,
-    visitors_count,
     tab2.utm_source,
     tab2.utm_medium,
     tab2.utm_campaign,
+    visitors_count,
     total_cost,
     leads_count,
     purchases_count,
@@ -80,5 +80,5 @@ from tab2 left join tab4
         and tab2.utm_medium = tab4.utm_medium
         and tab2.utm_campaign = tab4.utm_campaign
 group by 1, 2, 3, 4, 5, 6, 7, 8, 9
-order by revenue desc nulls last, visit_date asc, visitors_count desc, 3, 4, 5;
+order by revenue desc nulls last, visit_date asc, visitors_count desc, 2, 3, 4;
 
